@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>Digital Letter - Home</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- フォント（Playfair Display + Noto Sans JP） -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Playfair+Display:wght@500;600&display=swap"
+    rel="stylesheet"
+  >
+
+  <style>
+    :root {
+      --paper-cream: #f7f4ec;
+      --paper-ivory: #eee7da;
+      --ink-blue: #3e4a56;
+      --muted-rose: #a86b6b;
+      --antique-brown: #7b6148;
+      --gold-accent: #c9a86e;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      font-family: "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+      color: var(--ink-blue);
+      background:
+        radial-gradient(circle at top left, #ffffff 0, #f3ede0 35%, #e9dfcf 80%),
+        var(--paper-cream);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .app-frame {
+      width: 100%;
+      max-width: 480px;
+      min-height: 640px;
+      background: radial-gradient(circle at top left, #fdfaf3 0, #f7f4ec 45%, #f1eadf 100%);
+      border-radius: 24px;
+      box-shadow:
+        0 18px 40px rgba(0, 0, 0, 0.12),
+        0 0 0 1px rgba(255, 255, 255, 0.4);
+      padding: 24px 20px 20px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(8px);
+      animation: appFadeIn 0.9s ease-out forwards;
+    }
+
+    /* 紙のざらつき風オーバーレイ（ごく薄く） */
+    .app-frame::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image: radial-gradient(rgba(0, 0, 0, 0.06) 1px, transparent 0);
+      background-size: 2px 2px;
+      opacity: 0.16;
+      mix-blend-mode: multiply;
+    }
+
+    .app-inner {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      padding-bottom: 12px;
+    }
+
+    .logo {
+      font-family: "Playfair Display", "Times New Roman", serif;
+      font-size: 26px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-blue);
+    }
+
+    .logo-accent {
+      letter-spacing: 0;
+      font-size: 22px;
+      margin-left: 4px;
+      color: var(--antique-brown);
+    }
+
+    .tagline {
+      margin-top: 4px;
+      font-size: 12px;
+      color: rgba(62, 74, 86, 0.7);
+    }
+
+    /* Main */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 12px 8px 0;
+      gap: 18px;
+    }
+
+    .envelope-wrapper {
+      margin-top: 10px;
+      margin-bottom: 4px;
+      animation: envelopeFloat 5.5s ease-in-out infinite;
+      transform-origin: center;
+    }
+
+    /* 封筒コンポーネント */
+    .envelope {
+      width: 230px;
+      height: 150px;
+      background: linear-gradient(145deg, #f9f6ee, #f3ebde);
+      border-radius: 14px;
+      position: relative;
+      box-shadow:
+        0 8px 22px rgba(0, 0, 0, 0.15),
+        0 0 0 1px rgba(139, 120, 92, 0.25);
+      overflow: hidden;
+    }
+
+    /* 封筒のフラップ */
+    .envelope::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(
+          to bottom right,
+          rgba(210, 196, 173, 0.55),
+          rgba(246, 238, 224, 0.2)
+        );
+      clip-path: polygon(0 0, 100% 0, 50% 56%);
+      mix-blend-mode: multiply;
+    }
+
+    /* 中央の折り目 */
+    .envelope::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background:
+        linear-gradient(
+          to bottom,
+          rgba(139, 120, 92, 0.25) 0,
+          transparent 18%,
+          transparent 82%,
+          rgba(139, 120, 92, 0.18) 100%
+        );
+      mix-blend-mode: soft-light;
+      opacity: 0.75;
+    }
+
+    /* スタンプ領域 */
+    .stamp {
+      position: absolute;
+      right: 14px;
+      top: 14px;
+      width: 32px;
+      height: 40px;
+      border-radius: 6px;
+      background: radial-gradient(circle at top left, #fbe7dc 0, #e0b8a7 45%, #c08970 100%);
+      box-shadow:
+        0 0 0 1px rgba(120, 88, 70, 0.35),
+        0 4px 8px rgba(0, 0, 0, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fffaf7;
+      font-size: 9px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      animation: stampGlow 4.2s ease-in-out infinite;
+    }
+
+    .stamp span {
+      transform: rotate(-10deg);
+    }
+
+    /* 封筒下部に宛名っぽい線 */
+    .envelope-address {
+      position: absolute;
+      left: 18px;
+      bottom: 20px;
+      width: 60%;
+      height: 32px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      opacity: 0.55;
+    }
+
+    .envelope-address-line {
+      height: 1px;
+      background: linear-gradient(to right, rgba(80, 80, 80, 0.5), transparent);
+    }
+
+    .envelope-glow {
+      position: absolute;
+      inset: auto 18px -8px;
+      height: 24px;
+      border-radius: 50%;
+      background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.25), transparent 70%);
+      opacity: 0.5;
+      filter: blur(3px);
+    }
+
+    /* 手紙を書くボタン（aタグに変更済み） */
+    .primary-button {
+      margin-top: 10px;
+      width: min(320px, 90%);
+      height: 52px;
+      border-radius: 14px;
+      border: none;
+      background: linear-gradient(135deg, #b77979, #a86b6b);
+      color: var(--paper-cream);
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      box-shadow:
+        0 10px 18px rgba(168, 107, 107, 0.35),
+        0 0 0 1px rgba(255, 255, 255, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition:
+        transform 0.12s ease-out,
+        box-shadow 0.12s ease-out,
+        filter 0.12s ease-out;
+      text-decoration: none;
+    }
+
+    .primary-button span.label-jp {
+      font-size: 15px;
+      letter-spacing: 0.08em;
+    }
+
+    .primary-button span.label-en {
+      font-size: 10px;
+      opacity: 0.8;
+    }
+
+    .primary-button:hover {
+      transform: translateY(-1px);
+      box-shadow:
+        0 14px 26px rgba(168, 107, 107, 0.42),
+        0 0 0 1px rgba(255, 255, 255, 0.9);
+      filter: brightness(1.02);
+    }
+
+    .primary-button:active {
+      transform: translateY(1px) scale(0.99);
+      box-shadow:
+        0 6px 10px rgba(168, 107, 107, 0.3),
+        0 0 0 1px rgba(255, 255, 255, 0.7);
+      filter: brightness(0.98);
+    }
+
+    /* クイックアクセス */
+    .quick-access {
+      width: 100%;
+      max-width: 360px;
+      margin-top: 6px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .quick-card {
+      background: var(--paper-ivory);
+      border-radius: 12px;
+      padding: 10px 6px 8px;
+      text-align: center;
+      box-shadow:
+        0 2px 6px rgba(0, 0, 0, 0.08),
+        0 0 0 1px rgba(255, 255, 255, 0.7);
+      cursor: default;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      position: relative;
+      overflow: hidden;
+      transform: translateY(4px);
+      opacity: 0;
+      animation: cardFadeUp 0.8s ease-out forwards;
+    }
+
+    .quick-card:nth-child(1) {
+      animation-delay: 0.2s;
+    }
+    .quick-card:nth-child(2) {
+      animation-delay: 0.32s;
+    }
+    .quick-card:nth-child(3) {
+      animation-delay: 0.44s;
+    }
+
+    .quick-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to bottom right,
+        rgba(255, 255, 255, 0.7),
+        rgba(201, 168, 110, 0.06)
+      );
+      opacity: 0;
+      transition: opacity 0.2s ease-out;
+      pointer-events: none;
+    }
+
+    .quick-card:hover::before {
+      opacity: 1;
+    }
+
+    .quick-card-icon {
+      font-size: 20px;
+    }
+
+    .quick-card-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: rgba(62, 74, 86, 0.9);
+    }
+
+    .quick-card-caption {
+      font-size: 9px;
+      color: rgba(62, 74, 86, 0.6);
+      margin-top: 2px;
+      line-height: 1.4;
+    }
+
+    /* 下部コピー */
+    .bottom-copy {
+      margin-top: 18px;
+      text-align: center;
+      font-size: 11px;
+      color: rgba(62, 74, 86, 0.7);
+      line-height: 1.6;
+    }
+
+    .bottom-copy strong {
+      color: var(--antique-brown);
+      font-weight: 600;
+    }
+
+    /* Footer */
+    .footer {
+      margin-top: auto;
+      padding-top: 16px;
+      padding-bottom: 4px;
+    }
+
+    .footer-line {
+      height: 1px;
+      width: 100%;
+      border-radius: 999px;
+      background: linear-gradient(
+        to right,
+        transparent 0,
+        rgba(139, 120, 92, 0.3) 20%,
+        rgba(201, 168, 110, 0.6) 50%,
+        rgba(139, 120, 92, 0.3) 80%,
+        transparent 100%
+      );
+      margin-bottom: 6px;
+    }
+
+    .footer-text {
+      text-align: center;
+      font-size: 10px;
+      color: rgba(62, 74, 86, 0.6);
+    }
+
+    .footer-pen {
+      font-size: 12px;
+      margin-right: 4px;
+    }
+
+    /* Animations */
+    @keyframes appFadeIn {
+      0% {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes envelopeFloat {
+      0% {
+        transform: translateY(0px) rotate(0deg);
+      }
+      50% {
+        transform: translateY(-4px) rotate(-0.4deg);
+      }
+      100% {
+        transform: translateY(0px) rotate(0deg);
+      }
+    }
+
+    @keyframes stampGlow {
+      0% {
+        box-shadow:
+          0 0 0 1px rgba(120, 88, 70, 0.35),
+          0 4px 8px rgba(0, 0, 0, 0.25);
+        transform: translateY(0);
+      }
+      50% {
+        box-shadow:
+          0 0 8px 1px rgba(255, 223, 196, 0.7),
+          0 4px 10px rgba(0, 0, 0, 0.3);
+        transform: translateY(-0.5px);
+      }
+      100% {
+        box-shadow:
+          0 0 0 1px rgba(120, 88, 70, 0.35),
+          0 4px 8px rgba(0, 0, 0, 0.25);
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes cardFadeUp {
+      0% {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 520px) {
+      .app-frame {
+        max-width: 100%;
+        border-radius: 0;
+        min-height: 100vh;
+        box-shadow: none;
+      }
+
+      body {
+        align-items: stretch;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-frame">
+    <div class="app-inner">
+      <!-- Header -->
+      <header class="header">
+        <div class="logo">
+          DIGITAL<span class="logo-accent">Letter</span>
+        </div>
+        <div class="tagline">ゆっくり、想いを届けよう。</div>
+      </header>
+
+      <!-- Main Content -->
+      <main class="main">
+        <!-- Envelope Visual -->
+        <div class="envelope-wrapper" aria-hidden="true">
+          <div class="envelope">
+            <div class="stamp"><span>DL</span></div>
+            <div class="envelope-address">
+              <div class="envelope-address-line"></div>
+              <div class="envelope-address-line"></div>
+              <div class="envelope-address-line" style="width: 60%;"></div>
+            </div>
+            <div class="envelope-glow"></div>
+          </div>
+        </div>
+
+        <!-- Primary CTA -->
+        <a class="primary-button" href="compose.html">
+          <span class="label-jp">手紙を書く</span>
+          <span class="label-en">WRITE A LETTER</span>
+        </a>
+
+        <!-- Quick Access Cards -->
+        <section class="quick-access" aria-label="主な機能へのショートカット">
+          <div class="quick-card">
+            <div class="quick-card-icon">📥</div>
+            <div class="quick-card-label">受信箱</div>
+            <div class="quick-card-caption">届いた手紙をひらく</div>
+          </div>
+          <div class="quick-card">
+            <div class="quick-card-icon">📚</div>
+            <div class="quick-card-label">手紙箱</div>
+            <div class="quick-card-caption">思い出の手紙をしまう</div>
+          </div>
+          <div class="quick-card">
+            <div class="quick-card-icon">⏳</div>
+            <div class="quick-card-label">タイムカプセル</div>
+            <div class="quick-card-caption">未来のあなたへ届ける</div>
+          </div>
+        </section>
+
+        <!-- Bottom Copy -->
+        <div class="bottom-copy">
+          ここから、<strong>大切な人への一通目</strong>が始まります。<br />
+          すぐじゃなくていい。ゆっくり届けましょう。
+        </div>
+      </main>
+
+      <!-- Footer -->
+      <footer class="footer">
+        <div class="footer-line"></div>
+        <div class="footer-text">
+          <span class="footer-pen">✒️</span>
+          大切なことほど、ゆっくり伝えてみる。
+        </div>
+      </footer>
+    </div>
+  </div>
+</body>
+</html>
