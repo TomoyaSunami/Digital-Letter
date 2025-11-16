@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Digital Letter - 手紙を書く</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- フォント（ネット接続時に反映） -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600&family=Playfair+Display:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-paper: #fff8f2;
+      --ink: #2a2a2a;
+      --accent: #8ab4f8;
+      --accent-soft: #e1ecff;
+      --border-soft: #e2d7cd;
+      --brown: #6f4e37;
+      --danger: #d07a7a;
+      --shadow-soft: 0 8px 20px rgba(0,0,0,0.06);
+      --radius-lg: 16px;
+      --radius-md: 10px;
+      --radius-sm: 6px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Noto Serif JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #fffdf8 0, #f5ebe0 55%, #ecdfd1 100%);
+      color: var(--ink);
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    /* ヘッダー */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(14px);
+      background: linear-gradient(to bottom, rgba(255,248,242,0.95), rgba(255,248,242,0.85));
+      border-bottom: 1px solid rgba(111, 78, 55, 0.08);
+    }
+
+    .header-inner {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .logo-main {
+      font-family: "Playfair Display", "Times New Roman", serif;
+      font-weight: 600;
+      font-size: 24px;
+      letter-spacing: 0.06em;
+      color: var(--brown);
+    }
+
+    .logo-sub {
+      font-size: 11px;
+      color: rgba(42,42,42,0.7);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .btn {
+      border-radius: 999px;
+      border: 1px solid transparent;
+      padding: 7px 16px;
+      font-size: 13px;
+      cursor: pointer;
+      background: transparent;
+      font-family: inherit;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease, border-color 0.2s ease;
+    }
+
+    .btn-ghost {
+      border-color: rgba(111, 78, 55, 0.25);
+      background: rgba(255, 248, 242, 0.6);
+    }
+
+    .btn-ghost:hover {
+      background: rgba(255, 248, 242, 1);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent) 0%, #6f9ef0 100%);
+      color: #fff;
+      box-shadow: 0 8px 16px rgba(82, 127, 227, 0.3);
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 10px 20px rgba(82, 127, 227, 0.38);
+      transform: translateY(-1px);
+    }
+
+    .btn-icon {
+      font-size: 15px;
+    }
+
+    /* メインレイアウト */
+    main {
+      max-width: 1120px;
+      margin: 18px auto 32px;
+      padding: 0 20px;
+    }
+
+    .page-title {
+      margin-bottom: 10px;
+    }
+
+    .page-title h1 {
+      font-size: 22px;
+      font-weight: 600;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .page-title h1 span.icon {
+      font-size: 22px;
+    }
+
+    .page-title p {
+      margin: 4px 0 0;
+      font-size: 13px;
+      color: rgba(42,42,42,0.75);
+    }
+
+    .editor-layout {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1.5fr) 260px;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    @media (max-width: 960px) {
+      .editor-layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .panel {
+      background: var(--bg-paper);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-soft);
+      border: 1px solid var(--border-soft);
+      padding: 14px 14px 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .panel-title {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(42,42,42,0.7);
+    }
+
+    .panel-tag {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.9);
+      border: 1px solid rgba(111,78,55,0.1);
+      color: rgba(42,42,42,0.6);
+    }
+
+    /* 左パネル：便箋・封筒 */
+    .stationery-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 4px;
+      max-height: 420px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .stationery-item {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      padding: 8px 9px;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(111,78,55,0.12);
+      background: rgba(255,255,255,0.7);
+      cursor: pointer;
+      transition: background 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, transform 0.08s ease;
+    }
+
+    .stationery-item:hover {
+      background: rgba(255,255,255,1);
+      box-shadow: 0 6px 10px rgba(0,0,0,0.04);
+      transform: translateY(-1px);
+    }
+
+    .stationery-item.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(138,180,248,0.6);
+      background: var(--accent-soft);
+    }
+
+    .stationery-thumb {
+      width: 40px;
+      height: 50px;
+      border-radius: 6px;
+      background: linear-gradient(145deg, #fffdf9 0%, #f4e1c8 100%);
+      border: 1px solid rgba(111,78,55,0.14);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stationery-thumb::before {
+      content: "";
+      position: absolute;
+      top: 6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 70%;
+      height: 1px;
+      background: rgba(111,78,55,0.2);
+      box-shadow:
+        0 6px 0 rgba(111,78,55,0.16),
+        0 12px 0 rgba(111,78,55,0.1),
+        0 18px 0 rgba(111,78,55,0.06);
+    }
+
+    .stationery-meta-title {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .stationery-meta-sub {
+      font-size: 11px;
+      color: rgba(42,42,42,0.65);
+    }
+
+    .stationery-tag {
+      font-size: 10px;
+      margin-top: 3px;
+      display: inline-flex;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: rgba(111,78,55,0.05);
+      color: rgba(42,42,42,0.6);
+    }
+
+    /* 中央パネル：手紙本文 */
+    .letter-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 12px;
+      color: rgba(42,42,42,0.75);
+    }
+
+    .letter-meta label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .input-pill {
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(111,78,55,0.18);
+      background: rgba(255,255,255,0.9);
+      font-size: 12px;
+      min-width: 100px;
+    }
+
+    .letter-preview {
+      background: #fffdf8;
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(111,78,55,0.18);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.9);
+      padding: 14px 18px 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .letter-preview::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: linear-gradient(to bottom, rgba(0,0,0,0.03) 1px, transparent 1px);
+      background-size: 100% 22px;
+      opacity: 0.35;
+      pointer-events: none;
+    }
+
+    .letter-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      position: relative;
+      z-index: 1;
+      margin-bottom: 6px;
+    }
+
+    .letter-to {
+      font-size: 13px;
+      color: rgba(42,42,42,0.75);
+    }
+
+    .letter-to span {
+      font-weight: 600;
+      color: var(--brown);
+    }
+
+    .letter-date {
+      font-size: 11px;
+      color: rgba(42,42,42,0.55);
+    }
+
+    .letter-body-wrapper {
+      position: relative;
+      z-index: 1;
+      margin-top: 6px;
+    }
+
+    .letter-body {
+      width: 100%;
+      border: none;
+      background: transparent;
+      resize: none;
+      min-height: 220px;
+      font-size: 14px;
+      line-height: 1.9;
+      font-family: "Noto Serif JP", serif;
+      color: var(--ink);
+      padding: 4px 2px 0;
+      outline: none;
+    }
+
+    .letter-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 6px;
+      font-size: 11px;
+      color: rgba(42,42,42,0.6);
+      position: relative;
+      z-index: 1;
+    }
+
+    .letter-char-count {
+      font-variant-numeric: tabular-nums;
+    }
+
+    .letter-actions {
+      margin-top: 14px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .send-group {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-send {
+      padding-inline: 20px;
+      font-size: 14px;
+    }
+
+    .send-note {
+      font-size: 11px;
+      color: rgba(42,42,42,0.7);
+    }
+
+    .draft-link {
+      font-size: 11px;
+      text-decoration: underline;
+      text-decoration-style: dotted;
+      cursor: pointer;
+    }
+
+    /* 右パネル：添付・配達設定 */
+    .section-title {
+      font-size: 12px;
+      font-weight: 600;
+      margin: 8px 0 4px;
+      color: rgba(42,42,42,0.8);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .badge-soft {
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 999px;
+      background: rgba(138,180,248,0.1);
+      color: rgba(42,42,42,0.65);
+      border: 1px solid rgba(138,180,248,0.4);
+    }
+
+    .attachments-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0,1fr));
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .attachment-tile {
+      border-radius: var(--radius-md);
+      border: 1px dashed rgba(111,78,55,0.25);
+      background: rgba(255,255,255,0.85);
+      padding: 10px 4px;
+      text-align: center;
+      font-size: 11px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s ease, border-color 0.15s ease, transform 0.08s ease, box-shadow 0.15s ease;
+    }
+
+    .attachment-tile span.icon {
+      font-size: 16px;
+    }
+
+    .attachment-tile:hover {
+      background: rgba(255,255,255,1);
+      border-style: solid;
+      border-color: rgba(111,78,55,0.45);
+      box-shadow: 0 6px 10px rgba(0,0,0,0.04);
+      transform: translateY(-1px);
+    }
+
+    .delivery-options {
+      margin-top: 4px;
+      padding: 8px 8px 4px;
+      border-radius: var(--radius-md);
+      background: rgba(255,255,255,0.9);
+      border: 1px solid rgba(111,78,55,0.16);
+      font-size: 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .delivery-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+    }
+
+    .delivery-row input[type="radio"] {
+      margin-top: 2px;
+    }
+
+    .delivery-label-main {
+      font-weight: 600;
+    }
+
+    .delivery-label-sub {
+      font-size: 10px;
+      color: rgba(42,42,42,0.6);
+    }
+
+    .delivery-time-input {
+      margin-left: 20px;
+      margin-top: 4px;
+    }
+
+    .delivery-time-input input {
+      width: 100%;
+      padding: 4px 6px;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(111,78,55,0.3);
+      font-size: 11px;
+      font-family: inherit;
+      background: rgba(255,255,255,0.95);
+    }
+
+    .tips-box {
+      margin-top: 10px;
+      padding: 8px 10px;
+      border-radius: var(--radius-md);
+      background: rgba(255,255,255,0.85);
+      border: 1px solid rgba(111,78,55,0.14);
+      font-size: 11px;
+      color: rgba(42,42,42,0.75);
+    }
+
+    .tips-box strong {
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 4px;
+      color: rgba(42,42,42,0.55);
+    }
+
+    .tips-box ul {
+      padding-left: 16px;
+      margin: 4px 0 0;
+    }
+
+    .tips-box li {
+      margin-bottom: 2px;
+    }
+
+    /* スクロールバー */
+    .stationery-list::-webkit-scrollbar {
+      width: 5px;
+    }
+    .stationery-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .stationery-list::-webkit-scrollbar-thumb {
+      background: rgba(111,78,55,0.18);
+      border-radius: 999px;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-main">Digital Letter</div>
+      <div class="logo-sub">想いを伝える体験で、人生を豊かにする。</div>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-ghost">
+        <span class="btn-icon">📬</span>
+        手紙箱をひらく
+      </button>
+      <button class="btn btn-primary">
+        <span class="btn-icon">✉️</span>
+        新しい手紙
+      </button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="page-title">
+    <h1><span class="icon">✍️</span> 手紙を書く</h1>
+    <p>大切な人を思い浮かべながら、一通の手紙に想いを込めましょう。</p>
+  </div>
+
+  <section class="editor-layout">
+
+    <!-- 左：便箋・封筒 -->
+    <aside class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Stationery</div>
+        <div class="panel-tag">便箋・封筒</div>
+      </div>
+      <div class="stationery-list">
+        <div class="stationery-item active">
+          <div class="stationery-thumb"></div>
+          <div class="stationery-meta">
+            <div class="stationery-meta-title">クラシックアイボリー</div>
+            <div class="stationery-meta-sub">シンプルで誰にでも使いやすい便箋。</div>
+            <div class="stationery-tag">おすすめ</div>
+          </div>
+        </div>
+        <div class="stationery-item">
+          <div class="stationery-thumb" style="background:linear-gradient(145deg,#fffdf9 0%,#e6f0ff 100%);"></div>
+          <div class="stationery-meta">
+            <div class="stationery-meta-title">ブルーポスト</div>
+            <div class="stationery-meta-sub">郵便をイメージした青いライン。</div>
+            <div class="stationery-tag">カジュアル</div>
+          </div>
+        </div>
+        <div class="stationery-item">
+          <div class="stationery-thumb" style="background:linear-gradient(145deg,#fffdf9 0%,#f3d9de 100%);"></div>
+          <div class="stationery-meta">
+            <div class="stationery-meta-title">ロゼレター</div>
+            <div class="stationery-meta-sub">少し特別な想いを込めたいときに。</div>
+            <div class="stationery-tag">記念日</div>
+          </div>
+        </div>
+        <div class="stationery-item">
+          <div class="stationery-thumb" style="background:repeating-linear-gradient(135deg,#fffdf9,#fffdf9 6px,#f2e5cf 7px,#f2e5cf 8px);"></div>
+          <div class="stationery-meta">
+            <div class="stationery-meta-title">ビンテージエアメール</div>
+            <div class="stationery-meta-sub">遠くの誰かへ送りたくなる模様。</div>
+            <div class="stationery-tag">遠距離</div>
+          </div>
+        </div>
+        <div class="stationery-item">
+          <div class="stationery-thumb" style="background:linear-gradient(145deg,#fffdf9 0%,#ede7da 100%);"></div>
+          <div class="stationery-meta">
+            <div class="stationery-meta-title">サンドクラフト</div>
+            <div class="stationery-meta-sub">落ち着いたブラウンで、ビジネスにも。</div>
+            <div class="stationery-tag">ビジネス</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- 中央：手紙本文 -->
+    <section class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Letter</div>
+        <div class="panel-tag">本文</div>
+      </div>
+
+      <div class="letter-meta">
+        <label>
+          宛先：
+          <input class="input-pill" type="text" placeholder="〇〇さん へ">
+        </label>
+        <label>
+          差出人：
+          <input class="input-pill" type="text" placeholder="あなたの名前">
+        </label>
+      </div>
+
+      <div class="letter-preview">
+        <div class="letter-header-row">
+          <div class="letter-to">To. <span>〇〇さん</span></div>
+          <div class="letter-date" id="letterDate">2025年11月13日</div>
+        </div>
+        <div class="letter-body-wrapper">
+          <textarea id="letterBody" class="letter-body" placeholder="今日は、あなたにゆっくり手紙を書いてみようと思いました。&#10;最近のこと、伝えそびれていた感謝のこと、&#10;画面越しではうまく言えなかった本音のこと…。&#10;&#10;ゆっくり、思いつくままに書いてみてください。"></textarea>
+        </div>
+        <div class="letter-footer">
+          <div class="letter-char-count" id="charCount">0 文字</div>
+          <div>自動保存：オン（下書きはあなたの手紙箱に保管されます）</div>
+        </div>
+      </div>
+
+      <div class="letter-actions">
+        <div class="send-group">
+          <button class="btn btn-primary btn-send">
+            <span class="btn-icon">📮</span>
+            この内容で送る
+          </button>
+          <span class="send-note">※ 今の配達設定にしたがって、ゆっくり届きます。</span>
+        </div>
+        <div>
+          <span class="draft-link">下書きとして保存する</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 右：添付・配達設定 -->
+    <aside class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Details</div>
+        <div class="panel-tag">添付・配達</div>
+      </div>
+
+      <div>
+        <div class="section-title">
+          📎 添付
+          <span class="badge-soft">任意</span>
+        </div>
+        <div class="attachments-grid">
+          <div class="attachment-tile">
+            <span class="icon">🖼️</span>
+            <span>写真</span>
+          </div>
+          <div class="attachment-tile">
+            <span class="icon">🎧</span>
+            <span>音声</span>
+          </div>
+          <div class="attachment-tile">
+            <span class="icon">🎬</span>
+            <span>動画</span>
+          </div>
+          <div class="attachment-tile">
+            <span class="icon">📍</span>
+            <span>場所</span>
+          </div>
+          <div class="attachment-tile">
+            <span class="icon">💮</span>
+            <span>スタンプ</span>
+          </div>
+          <div class="attachment-tile">
+            <span class="icon">📎</span>
+            <span>その他</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: 10px;">
+        <div class="section-title">
+          ⏱ 配達設定
+          <span class="badge-soft">デジタルならでは</span>
+        </div>
+        <div class="delivery-options">
+          <label class="delivery-row">
+            <input type="radio" name="delivery" value="standard" checked>
+            <div>
+              <div class="delivery-label-main">ふつうの配達（数時間〜半日）</div>
+              <div class="delivery-label-sub">今の気持ちを、少しだけ時間をおいてそっと届けます。</div>
+            </div>
+          </label>
+          <label class="delivery-row">
+            <input type="radio" name="delivery" value="slow">
+            <div>
+              <div class="delivery-label-main">ゆっくり配達（数日〜1週間）</div>
+              <div class="delivery-label-sub">本当の手紙のように、待つ時間も一緒にプレゼント。</div>
+            </div>
+          </label>
+          <label class="delivery-row">
+            <input type="radio" name="delivery" value="timecapsule">
+            <div>
+              <div class="delivery-label-main">タイムカプセル配達</div>
+              <div class="delivery-label-sub">未来の指定した日付に、そっと開く特別な手紙。</div>
+            </div>
+          </label>
+          <div class="delivery-time-input">
+            <input type="datetime-local" id="deliveryDateTime">
+          </div>
+        </div>
+      </div>
+
+      <div class="tips-box">
+        <strong>TIPS</strong>
+        <ul>
+          <li>いきなり完璧に書かなくて大丈夫。まずは思いついた一行から。</li>
+          <li>迷ったら「今日あったこと」「ありがとう」「ごめんね」から始めてみてください。</li>
+          <li>タイムカプセルにすると、未来のあなたと相手への贈り物になります。</li>
+        </ul>
+      </div>
+    </aside>
+
+  </section>
+</main>
+
+<script>
+  // 日付表示
+  (function setToday() {
+    const el = document.getElementById('letterDate');
+    if (!el) return;
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = d.getMonth() + 1;
+    const day = d.getDate();
+    el.textContent = y + '年' + m + '月' + day + '日';
+  })();
+
+  // 文字数カウント
+  (function setupCharCount() {
+    const body = document.getElementById('letterBody');
+    const counter = document.getElementById('charCount');
+    if (!body || !counter) return;
+
+    const update = () => {
+      const text = body.value;
+      counter.textContent = text.length + ' 文字';
+    };
+
+    body.addEventListener('input', update);
+    update();
+  })();
+
+  // タイムカプセル選択時に日時入力にフォーカス
+  (function setupDeliveryFocus() {
+    const radios = document.querySelectorAll('input[name="delivery"]');
+    const dtInput = document.getElementById('deliveryDateTime');
+    if (!radios.length || !dtInput) return;
+
+    radios.forEach(r => {
+      r.addEventListener('change', () => {
+        if (r.value === 'timecapsule' && r.checked) {
+          dtInput.focus();
+        }
+      });
+    });
+  })();
+</script>
+</body>
+</html>
